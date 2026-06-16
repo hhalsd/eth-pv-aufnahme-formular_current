@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#050505">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="PV Aufnahme">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>ETH PV Planner - Aufnahmeformular</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
+  <script src="scripts/app.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="brand-bar">
+      <img class="eth-logo" src="assets/eth-logo.png" alt="ETH Elektriker Erding Fraunberg Logo">
+      <div class="brand-copy">
+        <h1>ETH PV Planner - Aufnahmeformular</h1>
+        <p>Vor-Ort-Erfassung fuer PV-Angebote. Offlinefaehige PWA mit lokalem Entwurf und JSON-Datensatz-Export.</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="status-panel" class="card status-card">
+      <div class="status-grid">
+        <div>
+          <label class="label" for="workflowStatus">Status</label>
+          <select id="workflowStatus" name="workflowStatus">
+            <option value="Angebotsphase">Angebotsphase</option>
+            <option value="Auftrag erteilt">Auftrag erteilt</option>
+            <option value="Klaerungsbedarf">Klaerungsbedarf</option>
+            <option value="Sonstiges">Sonstiges</option>
+          </select>
+        </div>
+        <div>
+          <label class="label" for="workflowVerlauf">Verlauf</label>
+          <select id="workflowVerlauf" name="workflowVerlauf">
+            <option value="">Lokales Projekt auswaehlen</option>
+          </select>
+        </div>
+        <div>
+          <label class="label" for="workflowKommentar">Kommentar</label>
+          <textarea id="workflowKommentar" name="workflowKommentar" rows="3" placeholder="Kurzer Statuskommentar"></textarea>
+        </div>
+        <div>
+          <span class="label">Verbindung</span><strong id="onlineStatus">Status wird geprueft</strong>
+        </div>
+      </div>
+      <div class="button-row">
+        <button type="button" id="exportButton">JSON-Datensatz erzeugen</button>
+        <button type="button" id="newButton" class="secondary">Neue Aufnahme</button>
+      </div>
+      <p id="saveStatus" class="note">Entwurf nicht gespeichert.</p>
+    </section>
+
+    <form id="pvForm" autocomplete="on">
+      <section class="card">
+        <h2>1. Auftrag</h2>
+        <div class="field-group">
+          <label for="aufnahmeId">Aufnahme-ID</label>
+          <input type="text" id="aufnahmeId" name="aufnahmeId" readonly>
+
+          <label for="bearbeiter">Bearbeiter</label>
+          <select id="bearbeiter" name="bearbeiter">
+            <option value="">Bitte waehlen</option>
+            <option value="Notstromkaiser">Notstromkaiser</option>
+            <option value="Tom">Tom</option>
+            <option value="Michi">Michi</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="kundenname">Kundenname *</label>
+          <input type="text" id="kundenname" name="kundenname" required autocomplete="name" placeholder="Max Mustermann">
+
+          <label for="telefon">Telefon</label>
+          <input type="tel" id="telefon" name="telefon" autocomplete="tel" placeholder="+49 ...">
+
+          <label for="email">E-Mail</label>
+          <input type="email" id="email" name="email" autocomplete="email" placeholder="kunde@example.de">
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>2. Objekt</h2>
+        <div class="field-group">
+          <label for="strasse">Strasse *</label>
+          <input type="text" id="strasse" name="strasse" required placeholder="Musterstrasse">
+
+          <label for="hausnummer">Hausnummer *</label>
+          <input type="text" id="hausnummer" name="hausnummer" required placeholder="12a">
+        </div>
+        <div class="field-group">
+          <label for="plz">PLZ *</label>
+          <input type="text" id="plz" name="plz" required inputmode="numeric" autocomplete="postal-code" placeholder="85435">
+
+          <label for="ort">Ort *</label>
+          <input type="text" id="ort" name="ort" required autocomplete="address-level2" placeholder="Erding">
+        </div>
+        <div class="field-group full-width">
+          <button type="button" id="gpsButton" class="secondary">GPS-Adresse suchen</button>
+          <p id="gpsStatus" class="note"></p>
+        </div>
+        <div class="field-group">
+          <label for="netzbetreiber">Netzbetreiber</label>
+          <select id="netzbetreiber" name="netzbetreiber">
+            <option value="">Bitte waehlen</option>
+            <option value="Stadtwerke Erding">Stadtwerke Erding</option>
+            <option value="Bayernwerk">Bayernwerk</option>
+            <option value="Andere">Andere</option>
+          </select>
+
+          <label for="netzbetreiberAndere" id="netzbetreiberAndereLabel" style="display:none;">Anderer Netzbetreiber</label>
+          <input type="text" id="netzbetreiberAndere" name="netzbetreiberAndere" placeholder="Anderer Netzbetreiber" style="display:none;">
+        </div>
+        <div class="field-group full-width">
+          <label for="objektHinweise">Hinweise zu Objekt</label>
+          <textarea id="objektHinweise" name="objektHinweise" placeholder="Zugang, Besonderheiten, Lage, ..."></textarea>
+        </div>
+        <input type="hidden" id="gpsLat" name="gpsLat">
+        <input type="hidden" id="gpsLon" name="gpsLon">
+        <input type="hidden" id="gpsAccuracy" name="gpsAccuracy">
+        <input type="hidden" id="gpsTimestamp" name="gpsTimestamp">
+        <input type="hidden" id="gpsReverseProvider" name="gpsReverseProvider">
+        <input type="hidden" id="gpsReverseStatus" name="gpsReverseStatus">
+      </section>
+
+      <section class="card">
+        <h2>3. Dach / Montage</h2>
+        <div class="field-group">
+          <label for="dachaufbau">Dachaufbau *</label>
+          <select id="dachaufbau" name="dachaufbau" required>
+            <option value="">Bitte waehlen</option>
+            <option value="Steildach">Steildach</option>
+            <option value="Flachdach">Flachdach</option>
+            <option value="Stehfalz">Stehfalz</option>
+            <option value="Trapezblech">Trapezblech</option>
+          </select>
+
+          <label for="dachzustand">Dachzustand</label>
+          <select id="dachzustand" name="dachzustand">
+            <option value="Nicht geprueft">Nicht geprueft</option>
+            <option value="Gut">Gut</option>
+            <option value="In Ordnung mit Einschraenkungen">In Ordnung mit Einschraenkungen</option>
+            <option value="Sanierung pruefen">Sanierung pruefen</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="dachneigung">Dachneigung [Grad]</label>
+          <input type="number" id="dachneigung" name="dachneigung" min="0" max="90" step="1" placeholder="35">
+
+          <label for="ausrichtung">Ausrichtung</label>
+          <select id="ausrichtung" name="ausrichtung">
+            <option value="">Bitte waehlen</option>
+            <option value="Sued">Sued</option>
+            <option value="Ost-West">Ost-West</option>
+            <option value="Sonstige">Sonstige</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="einbindungBlitzschutz">Einbindung Blitzschutz</label>
+          <select id="einbindungBlitzschutz" name="einbindungBlitzschutz">
+            <option value="">Bitte waehlen</option>
+            <option value="Ja">Ja</option>
+            <option value="Nein">Nein</option>
+            <option value="zu pruefen">zu pruefen</option>
+          </select>
+
+          <label for="ziegeltyp">Ziegeltyp</label>
+          <input type="text" id="ziegeltyp" name="ziegeltyp" placeholder="Hersteller, Modell, Beschreibung">
+        </div>
+        <div class="field-group">
+          <label for="kabelwegDc">Kabelweg DC</label>
+          <select id="kabelwegDc" name="kabelwegDc">
+            <option value="">Bitte waehlen</option>
+            <option value="Aussenfassade">Aussenfassade</option>
+            <option value="Leerrohr vorhanden">Leerrohr vorhanden</option>
+            <option value="siehe Infotext">siehe Infotext</option>
+          </select>
+
+          <label for="kernbohrung">Kernbohrung?</label>
+          <select id="kernbohrung" name="kernbohrung">
+            <option value="">Bitte waehlen</option>
+            <option value="Ja">Ja</option>
+            <option value="Nein">Nein</option>
+            <option value="zu pruefen">zu pruefen</option>
+          </select>
+        </div>
+        <div class="field-group full-width">
+          <label for="weitereInfosDach">weitere Infos Dach</label>
+          <textarea id="weitereInfosDach" name="weitereInfosDach" placeholder="Gaube, Kamin, Dachfenster, SAT, Entluefter, ..."></textarea>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>4. Elektro / Zaehlerschrank</h2>
+        <div class="field-group">
+          <label for="zaehlerschrankGeeignet">Zaehlerschrank geeignet? *</label>
+          <select id="zaehlerschrankGeeignet" name="zaehlerschrankGeeignet" required>
+            <option value="">Bitte waehlen</option>
+            <option value="Platz ausreichend">Platz ausreichend</option>
+            <option value="Unterverteilung notwendig">Unterverteilung notwendig</option>
+            <option value="zu pruefen">zu pruefen</option>
+          </select>
+
+          <label for="potentialausgleichErdung">Potentialausgleich / Erdung</label>
+          <select id="potentialausgleichErdung" name="potentialausgleichErdung">
+            <option value="">Bitte waehlen</option>
+            <option value="vorhanden">vorhanden</option>
+            <option value="Staberder notwendig">Staberder notwendig</option>
+            <option value="zu pruefen">zu pruefen</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="hauptsicherung">Hauptsicherung</label>
+          <select id="hauptsicherung" name="hauptsicherung">
+            <option value="">Bitte waehlen</option>
+            <option value="3x63A">3x63A</option>
+            <option value="3x35A">3x35A</option>
+            <option value="3x25A">3x25A</option>
+            <option value="siehe Infotext">siehe Infotext</option>
+          </select>
+
+          <label for="leitungswegAc">Leitungsweg AC</label>
+          <input type="text" id="leitungswegAc" name="leitungswegAc" placeholder="Verlauf, Durchbrueche, Schaechte, ...">
+        </div>
+        <div class="field-group full-width">
+          <label for="weitereInfosElektro">weitere Infos Elektro</label>
+          <textarea id="weitereInfosElektro" name="weitereInfosElektro" placeholder="Zaehlerschrank, Potentialausgleich, UESS, Leitungsweg, Brandschutz, ..."></textarea>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>5. Anlage</h2>
+        <div class="field-group">
+          <label for="kwpWunsch">Gewuenschte Leistung [kWp]</label>
+          <input type="number" id="kwpWunsch" name="kwpWunsch" min="0" step="0.1" placeholder="10">
+
+          <label for="jahresverbrauch">Jahresverbrauch [kWh]</label>
+          <input type="number" id="jahresverbrauch" name="jahresverbrauch" min="0" step="1" placeholder="4500">
+        </div>
+        <div class="field-group">
+          <label for="speicherGewuenscht">Speicher gewuenscht?</label>
+          <select id="speicherGewuenscht" name="speicherGewuenscht">
+            <option value="Nicht geklaert">Nicht geklaert</option>
+            <option value="Ja">Ja</option>
+            <option value="Nein">Nein</option>
+          </select>
+
+          <label for="wallboxGewuenscht">Wallbox gewuenscht?</label>
+          <select id="wallboxGewuenscht" name="wallboxGewuenscht">
+            <option value="Nicht geklaert">Nicht geklaert</option>
+            <option value="Ja">Ja</option>
+            <option value="Nein">Nein</option>
+          </select>
+
+          <label for="notstrom">Notstrom?</label>
+          <select id="notstrom" name="notstrom">
+            <option value="">Bitte waehlen</option>
+            <option value="Ja, manuelle Umschaltung">Ja, manuelle Umschaltung</option>
+            <option value="Ja, automatische Umschaltung">Ja, automatische Umschaltung</option>
+            <option value="Nein">Nein</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="waermepumpe">Waermepumpe vorhanden/geplant?</label>
+          <select id="waermepumpe" name="waermepumpe">
+            <option value="Nicht geklaert">Nicht geklaert</option>
+            <option value="Vorhanden">Vorhanden</option>
+            <option value="Geplant">Geplant</option>
+            <option value="Nein">Nein</option>
+          </select>
+        </div>
+        <div class="field-group full-width">
+          <label for="weitereInfosAnlage">weitere Infos Anlage</label>
+          <textarea id="weitereInfosAnlage" name="weitereInfosAnlage" placeholder="Besondere Kundenwuensche, Prioritaeten, Technikhinweise, ..."></textarea>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>6. Sonstiges / To-do</h2>
+        <div class="field-group">
+          <label for="montagezeitraum">Montagezeitraum</label>
+          <input type="text" id="montagezeitraum" name="montagezeitraum" placeholder="z. B. Q3 2026 oder nach Dachsanierung">
+
+          <label for="angebotsreife">Angebotsreife *</label>
+          <select id="angebotsreife" name="angebotsreife" required>
+            <option value="">Bitte waehlen</option>
+            <option value="Ja">Ja</option>
+            <option value="Bedingt">Bedingt</option>
+            <option value="Nein">Nein</option>
+          </select>
+        </div>
+        <fieldset class="check-list">
+          <legend>To-do</legend>
+          <label><input type="checkbox" name="todo" value="Drohnenaufnahme"> Drohnenaufnahme</label>
+          <label><input type="checkbox" name="todo" value="Foto Hauptverteilung"> Foto Hauptverteilung</label>
+          <label><input type="checkbox" name="todo" value="Foto Zaehler / Zaehlernummer"> Foto Zaehler / Zaehlernummer</label>
+          <label><input type="checkbox" name="todo" value="Foto Kabelweg DC"> Foto Kabelweg DC</label>
+          <label><input type="checkbox" name="todo" value="Foto Kabelweg AC"> Foto Kabelweg AC</label>
+          <label><input type="checkbox" name="todo" value="Foto Gerueststellung"> Foto Gerueststellung</label>
+        </fieldset>
+        <div class="field-group full-width">
+          <label for="notizen">Sonstiges / offene Punkte</label>
+          <textarea id="notizen" name="notizen" placeholder="Besonderheiten, Risiken, Kundenwuensche, naechste Schritte..."></textarea>
+        </div>
+      </section>
+    </form>
+
+    <section id="preview-section" class="card wide-card">
+      <h2>JSON-Vorschau</h2>
+      <pre id="preview">Noch keine Daten.</pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 ETH PV Planner. Aufnahmeformular fuer Angebotsvorbereitung; ersetzt keine fachliche Planung, Netzvertraeglichkeitspruefung oder normkonforme Ausfuehrungsdokumentation.</p>
+  </footer>
+</body>
+</html>
